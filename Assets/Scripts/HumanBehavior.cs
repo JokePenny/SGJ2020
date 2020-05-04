@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 [System.Serializable]
 public class Boundary
@@ -9,6 +10,7 @@ public class Boundary
 
 public class HumanBehavior : MonoBehaviour
 {
+    [SerializeField] private AudioSource soundCatch;
     [SerializeField] private List<Sprite> statusList;
     [SerializeField] private Rigidbody rgdbody;
     [SerializeField] private Boundary boundary;
@@ -31,9 +33,9 @@ public class HumanBehavior : MonoBehaviour
     public void Start()
     {
         data = GetComponent<PoolObject>();
-        timeMove = Random.Range(0, 10);
+        timeMove = UnityEngine.Random.Range(0, 10);
         timeWait = 0;
-        direct = new Vector2(Random.Range(boundary.xMin, boundary.xMax), Random.Range(boundary.yMin, boundary.yMax));
+        direct = new Vector2(UnityEngine.Random.Range(boundary.xMin, boundary.xMax), UnityEngine.Random.Range(boundary.yMin, boundary.yMax));
         animateBody = GetComponent<Animator>();
         status = 2;
         spriteStatus.sprite = statusList[status];
@@ -41,26 +43,15 @@ public class HumanBehavior : MonoBehaviour
 
     public void BoomDead()
     {
-        data.DestroedObject(data);
+        if(data.DestroedObject != null) data.DestroedObject(data);
         Instantiate(playerExplosion, transform.position, transform.rotation);
         gameObject.SetActive(false);
     }
 
-    public void DownSatus(PoolObject obj)
+    public void Dead(GameController gameController)
     {
-        if(!isDead)
-        {
-            --status;
-            animateStatus.Play("ChangeStatus");
-            if(status < 0)
-            {
-                spriteStatus.sprite = statusList[0];
-                animateBody.Play("HumanDead");
-                isDead = true;
-                return;
-            }
-            spriteStatus.sprite = statusList[status];
-        }
+        gameController.AllDead -= Dead;
+        BoomDead();
     }
 
     void FixedUpdate()
@@ -94,7 +85,7 @@ public class HumanBehavior : MonoBehaviour
             (
                 Mathf.Clamp(rgdbody.position.x, boundary.xMin, boundary.xMax),
                 Mathf.Clamp(rgdbody.position.y, boundary.yMin, boundary.yMax),
-                3.28f
+                0.0f
             );
             return;
         }
@@ -107,7 +98,7 @@ public class HumanBehavior : MonoBehaviour
             (
                 Mathf.Clamp(rgdbody.position.x, boundary.xMin, boundary.xMax),
                 Mathf.Clamp(rgdbody.position.y, boundary.yMin, boundary.yMax),
-                3.28f
+                0.0f
             );
 
             timeMove -= Time.deltaTime;
@@ -115,9 +106,9 @@ public class HumanBehavior : MonoBehaviour
         else
         {
             rgdbody.velocity = new Vector2(0.0f, 0.0f);
-            direct = new Vector2(Random.Range(boundary.xMin, boundary.xMax), Random.Range(boundary.yMin, boundary.yMax));
-            timeMove = Random.Range(0, 10);
-            timeWait = Random.Range(0, 10);
+            direct = new Vector2(UnityEngine.Random.Range(boundary.xMin, boundary.xMax), UnityEngine.Random.Range(boundary.yMin, boundary.yMax));
+            timeMove = UnityEngine.Random.Range(0, 10);
+            timeWait = UnityEngine.Random.Range(0, 10);
         }
     }
 
@@ -129,22 +120,21 @@ public class HumanBehavior : MonoBehaviour
             return;
         }
 
-        if (other.tag == "CabbageEat")
+        if (other.tag == "CabbageEat" && other.GetComponent<DestroyByContact>().goalObject.Equals(gameObject))
         {
+            soundCatch.Play();
             statusDownTime = statusDownTimeMax;
             isTouch = false;
-            timeMove = Random.Range(0, 10);
+            timeMove = UnityEngine.Random.Range(0, 10);
             animateStatus.Play("ChangeStatus");
             status = status > 2 ? status : status + 1;
             spriteStatus.sprite = statusList[status];
-            other.gameObject.SetActive(false);
         }
     }
 
     public void ChangeDirection()
     {
         direct = -direct;
-        timeMove = Random.Range(0, 10);
-        //timeMove = Random.Range(0, 10);
+        timeMove = UnityEngine.Random.Range(5, 10);
     }
 }

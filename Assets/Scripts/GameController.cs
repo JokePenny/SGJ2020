@@ -1,72 +1,91 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private Image timerSpawnToNextHuman;
-    [SerializeField] private Transform humanSpawner;
-    [SerializeField] private HumanController humanController;
+    [SerializeField] private Text textRecord;
+    [SerializeField] private Text textCountHuman;
+    [SerializeField] private Boundary boundaryForAsteroid;
+    [SerializeField] private Slider timerSpawnToNextHuman;
+    [SerializeField] private Transform asteroidSpawner;
     [SerializeField] private MenuController menuController;
-    [SerializeField] private float timer;
-     [SerializeField] private float bestScoretimer;
-    [SerializeField] private int totalCountHumanLive;
-    [SerializeField] private int totalCountHumanLiveAndDie;
+    [SerializeField] public int totalCountHumanLive;
+    [SerializeField] private float spawnWaitStart;
+    public Action<GameController> AllDead;
 
-    [SerializeField] private float startWait;
-    [SerializeField] private float spawnWait;
     private Coroutine spawnerHuman;
     private float spawnWaitNow;
-    private bool isGameOver = false;
+    public bool isGameOver = false;
+    private float spawnWait;
+
+    private void Start() 
+    {
+        textRecord.text = PlayerPrefs.GetInt("score", 0).ToString();
+    }
 
     public void StartGame()
     {
-        spawnerHuman = StartCoroutine(SpawnWaves());
-        spawnWait = startWait;
+        textCountHuman.text = "0";
+        spawnWait = spawnWaitStart;
         spawnWaitNow = 0;
         isGameOver = false;
+        spawnerHuman = StartCoroutine(SpawnWaves());
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
     }
 
     public void GameOver()
     {
-        if(timer > bestScoretimer)
-            PlayerPrefs.SetFloat("score", timer);
-            
+        if(!isGameOver && AllDead != null)
+        {
+            isGameOver = true;
+            AllDead(this);
+        }
+        
         isGameOver = true;
-        StopGame();
-    }
+        int oldScore = PlayerPrefs.GetInt("score", -1);
+        if(oldScore < totalCountHumanLive)
+        {
+            oldScore = totalCountHumanLive;
+            PlayerPrefs.SetInt("score", totalCountHumanLive);
+        }
 
-    public void StopGame()
-    {
+        textRecord.text = oldScore.ToString();
         StopCoroutine(spawnerHuman);
         menuController.OpenMainMenu();
     }
 
     public void HumanDie(PoolObject human)
     {
-        --totalCountHumanLive;
-        if(totalCountHumanLive == 0) GameOver();
+        human.DestroedObject -= HumanDie;
+        AllDead -=  human.GetComponent<HumanBehavior>().Dead;
+        if(!isGameOver)
+        {
+            isGameOver = true;
+            AllDead(this);
+            GameOver();
+        }
     }
 
     private IEnumerator SpawnWaves ()
     {
-        yield return new WaitForSeconds (startWait);
+        yield return new WaitForSeconds (spawnWait);
         while (true)
         {
-            Vector3 spawnPosition = humanSpawner.position;
+            Vector2 spawnPosition = asteroidSpawner.position;
             Quaternion spawnRotation = Quaternion.identity;
-            Rigidbody human = ObjectPooler.Instance.SpawnFromPool("Human", spawnPosition, spawnRotation);
-            if(human != null)
-            {
-                totalCountHumanLive++;
-                human.GetComponent<PoolObject>().DestroedObject += HumanDie;
-                human.GetComponent<PoolObject>().DestroedObject += humanController.HumanDie;
-                humanController.DestroedObject += human.GetComponent<HumanBehavior>().DownSatus;
-            }
-            else continue;
-            if(totalCountHumanLive == 0) break;
+            Rigidbody asteroid = ObjectPooler.Instance.SpawnFromPool("Asteroid", spawnPosition, spawnRotation);
+            Asteroid aster = asteroid.gameObject.GetComponent<Asteroid>();
+            aster.target = new Vector2 (UnityEngine.Random.Range (boundaryForAsteroid.xMin, boundaryForAsteroid.xMax), UnityEngine.Random.Range (boundaryForAsteroid.yMin, boundaryForAsteroid.yMax));
+            aster.spawn = true;
             spawnWaitNow = 0;
-            spawnWait += 5;
+            if(spawnWait - 1 > 2) --spawnWait;
             yield return new WaitForSeconds (spawnWait);
         }
     }
@@ -75,8 +94,7 @@ public class GameController : MonoBehaviour
     {
         if(!isGameOver)
         {
-            timer += Time.deltaTime;
-            timerSpawnToNextHuman.fillAmount = spawnWaitNow / spawnWait;
+            timerSpawnToNextHuman.value = spawnWaitNow / spawnWait;
             spawnWaitNow += Time.deltaTime;
         }
     }

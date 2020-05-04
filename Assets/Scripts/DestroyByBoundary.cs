@@ -6,6 +6,6 @@ public class DestroyByBoundary : MonoBehaviour
 {
     void OnTriggerEnter(Collider other)
     {
-        other.gameObject.SetActive(false);
+        if(other.tag != "Asteroid") other.gameObject.SetActive(false);
     }
 }

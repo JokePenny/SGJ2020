@@ -6,7 +6,7 @@ public class PoolObject : MonoBehaviour
     [SerializeField] private ObjectData data;
     [SerializeField] private MeshRenderer meshObject;
     [SerializeField] private Rigidbody rgdbody;
-    [SerializeField] private Sprite sprite;
+    [SerializeField] private SpriteRenderer spriteHuman;
     public Action<PoolObject> DestroedObject;
     public Rigidbody Rigidbody
     {
@@ -24,7 +24,7 @@ public class PoolObject : MonoBehaviour
         this.data = data;
         if(data is HumanData)
         {
-            sprite = (data as HumanData).SpriteObject;
+            spriteHuman.sprite = (data as HumanData).SpriteObject;
         }
     }
 }

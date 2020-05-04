@@ -57,6 +57,12 @@ public class ObjectPooler : MonoBehaviour
 
         PoolObject objectToSpawn = poolDictionary[tag].Dequeue();
 
+        if(tag == "Human")
+        {
+            ObjectData objectData = humanSetting[Random.Range(0, humanSetting.Count)];
+            objectToSpawn.Init(objectData);
+        }
+
         objectToSpawn.gameObject.SetActive(true);
         objectToSpawn.transform.position = position;
 
@@ -64,5 +70,22 @@ public class ObjectPooler : MonoBehaviour
 
         poolDictionary[tag].Enqueue(objectToSpawn);
         return objectToSpawn.Rigidbody;
+    }
+
+    public void SpawnParticle(string tag, Vector3 position, Quaternion rotation)
+    {
+        if(!poolDictionary.ContainsKey(tag))
+        {
+            Debug.LogWarning("Pool with tag " + tag + " doesn't exsist");
+        }
+
+        PoolObject objectToSpawn = poolDictionary[tag].Dequeue();
+        
+        objectToSpawn.gameObject.SetActive(true);
+        objectToSpawn.transform.position = position;
+
+        //objectToSpawn.Rigidbody.velocity = transform.forward * objectToSpawn.Speed;
+
+        poolDictionary[tag].Enqueue(objectToSpawn);
     }
 }
