@@ -14,17 +14,4 @@ public class MenuController : MonoBehaviour
     {
         animate.Play("ViewMenu");
     }
-
-    public void CloseMainMenu()
-    {
-        animate.Play("HiddenMenu");
-        gameController.StartGame();
-    }
-
-    
-    public void OpenPauseMenu()
-    {
-        //animate.Play("ViewMenu");
-        //gameController.StartGame();
-    }
 }
