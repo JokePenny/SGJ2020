@@ -6,12 +6,10 @@ using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private Text textRecord;
     [SerializeField] private Text textCountHuman;
     [SerializeField] private Boundary boundaryForAsteroid;
     [SerializeField] private Slider timerSpawnToNextHuman;
     [SerializeField] private Transform asteroidSpawner;
-    [SerializeField] private MenuController menuController;
     [SerializeField] public int totalCountHumanLive;
     [SerializeField] private float spawnWaitStart;
     public Action<GameController> AllDead;
@@ -23,7 +21,6 @@ public class GameController : MonoBehaviour
 
     private void Start() 
     {
-        textRecord.text = PlayerPrefs.GetInt("score", 0).ToString();
     }
 
     public void StartGame()
@@ -33,11 +30,6 @@ public class GameController : MonoBehaviour
         spawnWaitNow = 0;
         isGameOver = false;
         spawnerHuman = StartCoroutine(SpawnWaves());
-    }
-
-    public void Quit()
-    {
-        Application.Quit();
     }
 
     public void GameOver()
@@ -56,9 +48,7 @@ public class GameController : MonoBehaviour
             PlayerPrefs.SetInt("score", totalCountHumanLive);
         }
 
-        textRecord.text = oldScore.ToString();
         StopCoroutine(spawnerHuman);
-        menuController.OpenMainMenu();
     }
 
     public void HumanDie(PoolObject human)
